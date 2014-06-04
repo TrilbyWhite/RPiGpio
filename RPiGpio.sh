@@ -7,8 +7,8 @@
 ##
 ## Source this file in your bash operant programs
 
-msg_fifo_name=/tmp/rpi-gpio/msg
-event_fifo_name=/tmp/rpi-gpio/event
+msg_fifo_name=/tmp/rpi-gpio-msg
+event_fifo_name=/tmp/rpi-gpio-event
 
 RPiPinMask=$((16#000F))
 
