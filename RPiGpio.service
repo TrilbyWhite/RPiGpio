@@ -1,0 +1,10 @@
+[Unit]
+Description=GPIO access for Raspberry Pi Model B
+
+[Service]
+RemainAfterExit=yes
+Type=forking
+ExecStart=/usr/bin/RPiGpio
+
+[Install]
+WantedBy=multi-user.target

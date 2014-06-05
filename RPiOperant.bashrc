@@ -12,7 +12,7 @@ ID=$(whoami)
 USB=/home/$ID/usb
 MIN=15
 OPERANT=RPiOperant
-OPSCRIPT=$USB/operant.sh
+OPSCRIPT=$USB/RPiOperant.sh
 
 maintenance_mode() {
 	## Check for network connection
