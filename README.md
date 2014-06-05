@@ -75,7 +75,7 @@ flush_events();
 
 void send_msg(int msg);
 
-# Client programs
+## Client programs
 
 Client programs should do the following:
 
