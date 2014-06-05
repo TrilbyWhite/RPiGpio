@@ -67,6 +67,11 @@ inline int check_event(int sec, int usec) {
 	return msg;
 }
 
+inline void flush_events() {
+	int msg;
+	while (read(event_fd, &msg, sizeof(int)) > 0);
+}
+
 inline void send_msg(int msg) {
 	write(msg_fd, &msg, sizeof(int));
 }

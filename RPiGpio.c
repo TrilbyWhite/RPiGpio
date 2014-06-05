@@ -179,17 +179,17 @@ int main(int argc, const char **argv) {
 	/* loop until sigterm at shutdown */
 	msg_fd = open(msg_fifo_name, O_RDONLY | O_NONBLOCK);
 	for (;;) {
-fprintf(stderr,"[RPiGpio] starting session\n");
+		fprintf(stderr,"[RPiGpio] starting session\n");
 		/* wait for init msg */
 		int msg = 0, pin;
 		struct timeval tv;
 		fd_set fds;
 		uint8_t previous=0, current;
-fprintf(stderr,"[RPiGpio] waiting for init\n");
+		fprintf(stderr,"[RPiGpio] waiting for init\n");
 		while (!(msg & RPiMsgInit))
 			read(msg_fd, &msg, sizeof(int));
 		event_fd = open(event_fifo_name, O_WRONLY | O_NONBLOCK);
-fprintf(stderr,"[RPiGPio] recieved init\n");
+		fprintf(stderr,"[RPiGPio] recieved init\n");
 		gpio_init(msg);
 		/* loop until stop msg */
 		current = gpio_get(RPiPinMask);
@@ -206,12 +206,14 @@ fprintf(stderr,"[RPiGPio] recieved init\n");
 				else gpio_set(msg);
 			}
 			previous = current;
-			if ( (current=gpio_get(RPiPinMask)) != previous )
+			if ( (current=gpio_get(RPiPinMask)) != previous ) {
 				send(RPiEventChange | (current ^ previous));
+				send(RPiEventState | current);
+			}
 		}
 		close(event_fd); event_fd = 0;
-fprintf(stderr,"[RPiGpio] ending session\n");
-fprintf(stderr,"----------------------------------\n");
+		fprintf(stderr,"[RPiGpio] ending session\n");
+		fprintf(stderr,"----------------------------------\n");
 		gpio_end(msg);
 	}
 	/* double check that we've unexported everything */
