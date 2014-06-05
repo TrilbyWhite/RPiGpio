@@ -10,26 +10,31 @@
 msg_fifo_name=/tmp/rpi-gpio-msg
 event_fifo_name=/tmp/rpi-gpio-event
 
-RPiPinMask=$((16#000F))
+RPiPinMask=$((16#00FF))
 
-RPiMsgMask=$((16#00F0))
+RPiMsgMask=$((16#0F00))
 RPiMsgSetOff=$((16#0000))
-RPiMsgSetOn=$((16#0010))
-RPiMsgQueryState=$((16#0020))
-RPiMsgInit=$((16#0040))
-RPiMsgStop=$((16#0080))
+RPiMsgSetOn=$((16#0100))
+RPiMsgQueryState=$((16#0200))
+RPiMsgInit=$((16#0400))
+RPiMsgStop=$((16#0800))
 
-RPiEventMask=$((16#0F00))
-RPiEventError=$((16#0100))
-RPiEventChange=$((16#0200))
-RPiEventState=$((16#0400))
-RPiEventUnused=$((16#0800))
+RPiEventMask=$((16#F000))
+RPiEventError=$((16#1000))
+RPiEventChange=$((16#2000))
+RPiEventState=$((16#4000))
+RPiEventUnused=$((16#8000))
 
-RPiDetailMask=$((16#F000))
-RPiExported=$((16#1000))
-RPiDirection=$((16#2000))
-RPiFatalError=$((16#4000))
-RPiUnused=$((16#8000))
+RPiDetailMask=$((16#F0000))
+RPiExported=$((16#10000))
+RPiDirection=$((16#20000))
+RPiFatalError=$((16#40000))
+RPiUnused=$((16#80000))
+
+RPiPin() {
+	bits=${1:-0}
+	echo $(( 1 << $bits ))
+}
 
 check_event() {
 	[[ -n "$1" ]] && cmd="read -t $1" || cmd="read"

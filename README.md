@@ -18,11 +18,14 @@ messages to RPiGpio to change pin settings (change outputs) and the
 other for receiving events from RPiGpio (inputs).
 
 Interaction with these fifos can be handled by using the constants and
-inline functions defined in RPiGpio.h.  RPiOperant provides an example
-of this use to create a song-preference test for songbirds.
+inline functions defined in RPiGpio.h (for compiled client programs) or
+RPiGPio.sh (for shell script clients - this is not yet tested and may
+not currently work as RPiGpio requires a process have the event fifo
+open for reading before it proceeds).  RPiOperant provides an example of
+a compiled client for song-preference test for songbirds using
+RPiGpio.c.
 
-The constants, macros, and functions available in RPiGpio.h are as
-follows:
+The constants, macros, and functions available are as follows:
 
 <dl>
 <dt>RPiPinMask</dt><dd>
@@ -72,11 +75,11 @@ flush_events();
 
 void send_msg(int msg);
 
-### Client programs
+# Client programs
 
 Client programs should do the following:
 
-1. call *open_gpio*
+1. call *open_gpio* (compiled clients only)
 1. call *send_msg* passing a RPiMsgInit message bitwise-or'ed with an
 	RPiPin(pin) for every pin to be used as an input.
 1. The following may be used as needed:
@@ -91,8 +94,8 @@ Client programs should do the following:
 		  The return value will be an integer bitfield specifying an
 		  event or error message.
 		* call *flush_events* to discard any messages currently in the
-		  queue.
+		  queue. (not implemented in RPiGpio.sh yet)
 1. call *send_msg* with a RPiMsgStop message
-1. call *close_gpio*
+1. call *close_gpio* (compiled clients only)
 
 
