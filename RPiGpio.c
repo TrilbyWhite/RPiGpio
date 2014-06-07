@@ -168,6 +168,9 @@ void signal_handler(int sig) {
 }
 
 int main(int argc, const char **argv) {
+	/* daemonize */
+	if (fork() != 0) exit(0);
+	setsid();
 	/* create two fifos and open */
 	mkfifo(msg_fifo_name, 0666);
 	chmod(msg_fifo_name, 0666);
