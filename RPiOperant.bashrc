@@ -49,5 +49,5 @@ fi
 
 sync
 
-systemctl poweroff
+sudo systemctl poweroff
 
