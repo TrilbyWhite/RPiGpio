@@ -76,6 +76,7 @@ int main(int argc, const char **argv) {
 		}
 	}
 	/* clean up and exit: */
+	send_msg(RPiMsgSetOff | RPiPin(4) | RPiPin(5));
 	logs_close();
 	send_msg(RPiMsgStop);
 	sleep(1);

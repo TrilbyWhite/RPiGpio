@@ -47,5 +47,7 @@ fi
 ## If no proper usb is present, enter maintainence mode
 [[ -f $OPSCRIPT ]] && source $OPSCRIPT || maintenance_mode $MIN
 
-shutdown -h now
+sync
+
+systemctl poweroff
 
