@@ -14,7 +14,7 @@ install: ${PROG}
 	install -Dm755 -t ${DESTDIR}${PREFIX}/bin ${PROG}
 	install -Dm644 -t ${DESTDIR}${PREFIX}/include ${BASE}.h
 	install -Dm644 -t ${DESTDIR}/etc/${BASE} ${CONFS}
-	install -Dm644 ${PROG}.service ${DESTDIR}${PREFIX}/lib/systemd/system/${PROG}.service
+	install -Dm644 RPiGpio.service ${DESTDIR}${PREFIX}/lib/systemd/system/RPiGpio.service
 
 clean:
 	rm -f ${PROG}
