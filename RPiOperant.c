@@ -39,7 +39,7 @@ static const char *hbar =
 "------------------------------------------------------------------\n";
 static const char *hbar2 =
 "==================================================================\n\n";
-static const char *log_fname, *song_path, *data_path, *data_fname, *song[2];
+static const char *log_fname, *song_path, *data_fname, *song[2];
 static char song_name[2][64], full_path[256];
 static int session_min = 60, intertrial_sec = 5, interbout_sec = 60,
 		forced_trials = 6, free_trials = 80;
@@ -97,7 +97,6 @@ int config() {
 	/* get string variables */
 	if (!(	(log_fname = getenv("log_file")) &&
 		(song_path = getenv("stimulus_path")) &&
-		(data_path = getenv("data_path")) &&
 		(data_fname = getenv("data_file")) &&
 		(song[0] = getenv("stimulus1")) &&
 		(song[1] = getenv("stimulus2")) ) ) {

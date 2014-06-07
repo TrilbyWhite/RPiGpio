@@ -37,13 +37,12 @@
 ## Export variables that will be used by the operant program
 export log_file=$USB/data/operant.log
 export stimulus_path=$USB/songs
-export data_path=$USB/data
+export data_file=$USB/data/$(date +%Y%m%d_%H%M.csv)
 export session_duration=60                  # duration in minutes
 export intertrial_interval=30               # duration in seconds
 export interbout_interval=60                # duration in seconds
 export forced_trials=6                      # number per bout
 export free_trials=80                       # number per bout
-export data_file=$(date +%Y%m%d_%H%M.csv)   # filename
 export stimulus1=song1.wav                  # song for side 1
 export stimulus2=song2.wav                  # song for side 2
 
@@ -51,8 +50,8 @@ export stimulus2=song2.wav                  # song for side 2
 ## This should only be needed if there is no internet connection to set
 ## the current date and time.  If this is the case, the above default
 ## filename should be changed.
-local dfile="${data_file%.*}"
-local dfile_count=0
+dfile="${data_file%.*}"
+dfile_count=0
 while [[ -f ${data_path}/${data_file} ]]; do
 	dfile_count=$(( $dfile_count + 1 ))
 	data_file="${dfile}_${dfile_count}.csv"
