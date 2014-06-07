@@ -47,6 +47,18 @@ export data_file=$(date +%Y%m%d_%H%M.csv)   # filename
 export stimulus1=song1.wav                  # song for side 1
 export stimulus2=song2.wav                  # song for side 2
 
+## Ensure data file name is unique
+## This should only be needed if there is no internet connection to set
+## the current date and time.  If this is the case, the above default
+## filename should be changed.
+local dfile="${data_file%.*}"
+local dfile_count=0
+while [[ -f ${data_path}/${data_file} ]]; do
+	dfile_count=$(( $dfile_count + 1 ))
+	data_file="${dfile}_${dfile_count}.csv"
+done
+export data_file
+
 ## RUN OPERANT PROGRAM
 ## Execute the main operant program
 $OPERANT
