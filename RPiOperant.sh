@@ -62,8 +62,3 @@ export data_file
 ## Execute the main operant program
 $OPERANT
 
-## SHUTDOWN THE RASPBERRY PI
-## The following should always remain uncommented unless you know
-## exactly what you are doing
-shutdown -h now
-
