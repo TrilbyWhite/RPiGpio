@@ -208,6 +208,10 @@ int run_forced_trials(int bout) {
 		send_msg(RPiMsgSetOff | RPiPin(side+4));
 		log_data(-1, n, time_stamp - start_time, side);
 		play_song(side);
+		while (time_check() && now < time_stamp + intertrial_sec) {
+			flush_events();
+			sleep(1);
+		}
 	}
 	return 0;
 }
@@ -215,7 +219,7 @@ int run_forced_trials(int bout) {
 int run_free_trials(int bout) {
 	int n, msg, side;
 	time_t time_stamp;
-	for (n = 0; time_check() && n < forced_trials; n++) {
+	for (n = 0; time_check() && n < free_trials; n++) {
 		flush_events();
 		/* turn on stimulus lights */
 		send_msg(RPiMsgSetOn | RPiPin(4) | RPiPin(5));
@@ -232,6 +236,10 @@ int run_free_trials(int bout) {
 		send_msg(RPiMsgSetOff | RPiPin(4) | RPiPin(5));
 		log_data(bout, n, time_stamp - start_time, side);
 		play_song(side);
+		while (time_check() && now < time_stamp + intertrial_sec) {
+			flush_events();
+			sleep(1);
+		}
 	}
 	return 0;
 }
