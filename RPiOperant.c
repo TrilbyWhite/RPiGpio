@@ -60,6 +60,7 @@ int main(int argc, const char **argv) {
 	start_time = time(NULL);
 	logs_open();
 	signal(SIGINT, &signal_handler);
+	signal(SIGTERM, &signal_handler);
 	/* main loop: */
 	time_t time_stamp;
 	int bout;
@@ -131,13 +132,11 @@ int die(const char *str) {
 
 int log_data(int bout, int trial, time_t when, int side) {
 	/* log response */
-	fprintf(stderr, "[%06d] bout=%d, trial=%d, side=%d\n",
-			when, bout, trial, side);
 	fprintf(log_file, "[%06d] bout=%d, trial=%d, side=%d\n",
 			when, bout, trial, side);
 	if (bout == -1) return;
 	/* write to data file */
-	fprintf(data_file, "%d,%d,%d,%s\n",when, bout, trial, song_name[side]);
+	fprintf(data_file, "%04d,%d,%d,%s\n",when, bout, trial, song_name[side]);
 }
 
 int logs_open() {
@@ -193,7 +192,7 @@ int run_forced_trials(int bout) {
 	uint64_t forced_side = bit_shuffle(forced_trials);
 	time_t time_stamp;
 	for (n = 0; time_check() && n < forced_trials; n++) {
-		side = ((forced_side<<n) & 0x01);
+		side = ((forced_side>>n) & 0x01);
 		flush_events();
 		/* turn on stimulus light */
 		send_msg(RPiMsgSetOn | RPiPin(side+4));
@@ -239,6 +238,7 @@ int run_free_trials(int bout) {
 
 void signal_handler(int sig) {
 	die("received SIGINT");
+	die("received SIGTERM");
 }
 
 int time_check() {
