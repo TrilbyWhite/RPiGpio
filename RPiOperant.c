@@ -8,6 +8,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <stdint.h>
+#include <signal.h>
 #include <time.h>
 #include <unistd.h>
 #include "RPiGpio.h"
@@ -27,18 +28,18 @@ static int logs_close();
 static int play_song(int);
 static int run_forced_trials(int);
 static int run_free_trials(int);
+static void signal_handler(int);
 static int time_check();
 
 
 /***************************************\
 |* GLOBAL DATA
 \***************************************/
-static const char *log_fname = "/home/operant/operant.log";
 static const char *hbar =
 "------------------------------------------------------------------\n";
 static const char *hbar2 =
 "==================================================================\n\n";
-static const char *song_path, *data_path, *data_fname, *song[2];
+static const char *log_fname, *song_path, *data_path, *data_fname, *song[2];
 static char song_name[2][64], full_path[256];
 static int session_min = 60, intertrial_sec = 5, interbout_sec = 60,
 		forced_trials = 6, free_trials = 80;
@@ -58,6 +59,7 @@ int main(int argc, const char **argv) {
 	/* set up data files: */
 	start_time = time(NULL);
 	logs_open();
+	signal(SIGINT, &signal_handler);
 	/* main loop: */
 	time_t time_stamp;
 	int bout;
@@ -93,11 +95,15 @@ uint64_t bit_shuffle(int n) {
 
 int config() {
 	/* get string variables */
-	song_path = getenv("stimuls_path");
-	data_path = getenv("data_path");
-	data_fname = getenv("data_file");
-	song[0] = getenv("stimulus1");
-	song[1] = getenv("stimulus2");
+	if (!(	(log_fname = getenv("log_file")) &&
+		(song_path = getenv("stimulus_path")) &&
+		(data_path = getenv("data_path")) &&
+		(data_fname = getenv("data_file")) &&
+		(song[0] = getenv("stimulus1")) &&
+		(song[1] = getenv("stimulus2")) ) ) {
+		fprintf(stderr,"Environment variables not set\n");
+		exit(1);
+	}
 	/* get numeric variables */
 	const char *str;
 	if ((str=getenv("session_duration"))) session_min = atoi(str);
@@ -126,11 +132,13 @@ int die(const char *str) {
 
 int log_data(int bout, int trial, time_t when, int side) {
 	/* log response */
-	fprintf(log_file, "[%d] bout=%d, trial=%d, side=%d\n",
+	fprintf(stderr, "[%06d] bout=%d, trial=%d, side=%d\n",
+			when, bout, trial, side);
+	fprintf(log_file, "[%06d] bout=%d, trial=%d, side=%d\n",
 			when, bout, trial, side);
 	if (bout == -1) return;
 	/* write to data file */
-	fprintf(log_file, "%d,%d,%d,%s\n",when, bout, trial, song_name[side]);
+	fprintf(data_file, "%d,%d,%d,%s\n",when, bout, trial, song_name[side]);
 }
 
 int logs_open() {
@@ -145,9 +153,9 @@ int logs_open() {
 	if (log_file) {
 		fprintf(log_file, hbar2);
 		fprintf(log_file, "START SESSION:\n");
-		fprintf(log_file, "\ttime=%d (%s)\n",start_time,ctime(&start_time));
+		fprintf(log_file, "\ttime=%d: %s",start_time,ctime(&start_time));
 		char **var;
-		for (var = environ; var; var++)
+		for (var = environ; var && *var; var++)
 			fprintf(log_file, "\t%s\n", *var);
 		fprintf(log_file, hbar);
 	}
@@ -169,8 +177,8 @@ int logs_close() {
 
 int play_song(int n) {
 	// TODO Block while playing? If not, use fork()/execl instead.
-	snprintf(full_path, 256, "/usr/bin/play play -q %s/%s",
-			song_path, song[n]);
+	snprintf(full_path, 256, "/usr/bin/play -q %s/%s remix %d %d",
+			song_path, song[n], (n ? 0 : 1), (n ? 1 : 0));
 	system(full_path);
 //	if (!fork()==0) {
 //		snprintf(full_path, 256, "%s/%s", song_path, song[n]);
@@ -189,14 +197,17 @@ int run_forced_trials(int bout) {
 		side = ((forced_side<<n) & 0x01);
 		flush_events();
 		/* turn on stimulus light */
-		send_msg(RPiMsgSetOn | RPiPin(side+2));
+		send_msg(RPiMsgSetOn | RPiPin(side+4));
 		/* wait for trigger onset */
-		while (time_check() &&
-				(	(msg=check_event(1,0)) &
-					(RPiEventState | RPiPin(side)) ) );
+		for (;;) {
+			if (!time_check()) return 1;
+			if ( (msg=check_event(1,0)) &&
+				(msg & RPiEventChange) &&
+				(msg & RPiPin(side)) ) break;
+		}
 		/* turn off light + play song */
 		time_stamp = time(NULL);
-		send_msg(RPiMsgSetOff | RPiPin(side+2));
+		send_msg(RPiMsgSetOff | RPiPin(side+4));
 		log_data(-1, n, time_stamp - start_time, side);
 		play_song(side);
 	}
@@ -209,18 +220,26 @@ int run_free_trials(int bout) {
 	for (n = 0; time_check() && n < forced_trials; n++) {
 		flush_events();
 		/* turn on stimulus lights */
-		send_msg(RPiMsgSetOn | RPiPin(2) | RPiPin(3));
+		send_msg(RPiMsgSetOn | RPiPin(4) | RPiPin(5));
 		/* wait for trigger onset */
-		while (time_check() &&
-				(	(msg=check_event(1,0)) &
-					(RPiEventState | RPiPin(0) | RPiPin(1)) ) );
+		for (;;) {
+			if (!time_check()) return 1;
+			if ( (msg=check_event(1,0)) &&
+				(msg & RPiEventChange) &&
+				(msg & (RPiPin(0)|RPiPin(1))) ) break;
+		}
+		side = ((msg & RPiPinMask) == RPiPin(0) ? 0 : 1);
 		/* turn off light + play song */
 		time_stamp = time(NULL);
-		send_msg(RPiMsgSetOff | RPiPin(2) | RPiPin(3));
+		send_msg(RPiMsgSetOff | RPiPin(4) | RPiPin(5));
 		log_data(bout, n, time_stamp - start_time, side);
 		play_song(side);
 	}
 	return 0;
+}
+
+void signal_handler(int sig) {
+	die("received SIGINT");
 }
 
 int time_check() {

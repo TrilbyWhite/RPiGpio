@@ -35,6 +35,7 @@
 
 ## SET PARAMETERS
 ## Export variables that will be used by the operant program
+export log_file=$USB/data/operant.log
 export stimulus_path=$USB/songs
 export data_path=$USB/data
 export session_duration=60                  # duration in minutes

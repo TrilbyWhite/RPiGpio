@@ -38,7 +38,7 @@ static char path[GPIO_PATH_LEN];
 static const char *off="0";
 static const char *on="1";
 static const char *bcm_num[8] = {
-	"17", "18", "21", "22", "23", "24", "25", "4" };
+	"22", "27", "17", "4", "25", "24", "23", "18" };
 
 
 void clean_exit(int msg) {
@@ -131,7 +131,7 @@ int gpio_get(int msg) {
 		}
 		char cget = '0';
 		if (read(gpio_fd, &cget, sizeof(char)) == sizeof(char))
-			ret |= ((cget == '1' ? 1 : 0)<<pin);
+			ret |= ((cget == '1' ? 1 : 0)<<i);
 		else if (msg & RPiMsgMask)
 			send(RPiEventError | (RPiMsgMask & msg) | pin);
 		close(gpio_fd);
