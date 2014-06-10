@@ -1,6 +1,6 @@
 
 BASE   =  RPiGpio
-PROG   =  ${BASE} RPiOperant
+PROG   =  ${BASE} RPiOperant RPiPlayback
 CONFS  =  ${BASE}.sh RPiOperant.bashrc
 PREFIX ?= /usr
 
