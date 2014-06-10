@@ -59,7 +59,7 @@ int main(int argc, const char **argv) {
 	/* set up data files: */
 	start_time = time(NULL);
 	while (ethernet && (start_time < 600)) {
-		sleep 1;
+		sleep(1);
 		start_time = time(NULL);
 	}
 	logs_open();
