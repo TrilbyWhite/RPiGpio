@@ -140,9 +140,9 @@ int log_data(int bout, int trial, time_t when, int side) {
 	/* log response */
 	fprintf(log_file, "[%06d] bout=%d, trial=%d, side=%d\n",
 			when, bout, trial, side);
-	if (bout == -1) return;
+	//if (bout == -1) return;
 	/* write to data file */
-	fprintf(data_file, "%04d,%d,%d,%s\n",when, bout, trial, song_name[side]);
+	fprintf(data_file, "%04d,%d,%d,%s\n",when, bout + 1, trial + 1, song_name[side]);
 }
 
 int logs_open() {
