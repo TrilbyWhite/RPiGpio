@@ -42,7 +42,7 @@ static const char *hbar2 =
 static const char *log_fname, *song_path, *data_fname, *song[2];
 static char song_name[2][64], full_path[256];
 static int session_min = 60, intertrial_sec = 5, interbout_sec = 60,
-		forced_trials = 6, free_trials = 80;
+		forced_trials = 6, free_trials = 80, ethernet = 0;
 static time_t start_time, now;
 static FILE *log_file, *data_file;
 
@@ -58,6 +58,10 @@ int main(int argc, const char **argv) {
 	send_msg(RPiMsgInit | RPiPin(0) | RPiPin(1));
 	/* set up data files: */
 	start_time = time(NULL);
+	while (ethernet && (start_time < 600)) {
+		sleep 1;
+		start_time = time(NULL);
+	}
 	logs_open();
 	signal(SIGINT, &signal_handler);
 	signal(SIGTERM, &signal_handler);
@@ -107,6 +111,7 @@ int config() {
 	}
 	/* get numeric variables */
 	const char *str;
+	if ((str=getenv("ethernet"))) ethernet = atoi(str);
 	if ((str=getenv("session_duration"))) session_min = atoi(str);
 	if ((str=getenv("intertrial_interval"))) intertrial_sec = atoi(str);
 	if ((str=getenv("interbout_interval"))) interbout_sec = atoi(str);
