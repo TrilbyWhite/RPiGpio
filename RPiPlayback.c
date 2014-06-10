@@ -65,12 +65,16 @@ int main(int argc, const char **argv) {
 	int bout;
 	for (bout = 0; time_check(); bout++) {
 		/* run trials for bout */
+fprintf(stderr,"HERE 2\n");
+fprintf(stderr,"HERE 1\n");
 		run_forced_trials(bout);
+fprintf(stderr,"HERE 8\n");
 		/* pause for interbout interval & keep event cache flushed */
 		time_stamp = time(NULL);
 		while (time_check() && now < time_stamp + interbout_sec) {
 			sleep(1);
 		}
+fprintf(stderr,"HERE 9\n");
 	}
 	/* clean up and exit: */
 	logs_close();
@@ -179,7 +183,7 @@ int run_forced_trials(int bout) {
 	int n, msg, side;
 	time_t time_stamp;
 	for (n = 0; time_check() && n < forced_trials; n++) {
-		side = (int) (random() + 0.5);
+		side = rand() % 2;
 		/* play song */
 		time_stamp = time(NULL);
 		log_data(-1, n, time_stamp - start_time, side);
