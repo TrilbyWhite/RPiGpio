@@ -19,13 +19,15 @@ extern char **environ;
 /***************************************\
 |* FUNCTION PROTOTYPES
 \***************************************/
+static uint64_t bit_shuffle(int);
 static int config();
 static int die(const char *);
 static int log_data(int, int, time_t, int);
 static int logs_open();
 static int logs_close();
 static int play_song(int);
-static int run_trials(int);
+static int run_forced_trials(int);
+static int run_free_trials(int);
 static void signal_handler(int);
 static int time_check();
 
@@ -68,7 +70,7 @@ int main(int argc, const char **argv) {
 	int bout;
 	for (bout = 0; time_check(); bout++) {
 		/* run trials for bout */
-		run_trials(bout);
+		run_forced_trials(bout);
 		/* pause for interbout interval & keep event cache flushed */
 		time_stamp = time(NULL);
 		while (time_check() && now < time_stamp + interbout_sec) {
@@ -90,6 +92,12 @@ int main(int argc, const char **argv) {
 |* FUNCTION DEFINTIONS
 \***************************************/
 
+uint64_t bit_shuffle(int n) {
+	srandom(time(NULL));
+	uint32_t r = random() * 0xFFFFFFFF;
+	return ((r<<(n/2)) | ((~r) & ~(0xFFFFFFFF<<(n/2))));
+}
+
 int config() {
 	/* get string variables */
 	if (!(	(log_fname = getenv("log_file")) &&
@@ -106,7 +114,9 @@ int config() {
 	if ((str=getenv("session_duration"))) session_min = atoi(str);
 	if ((str=getenv("intertrial_interval"))) intertrial_sec = atoi(str);
 	if ((str=getenv("interbout_interval"))) interbout_sec = atoi(str);
+	if ((str=getenv("forced_trials"))) forced_trials = atoi(str);
 	if ((str=getenv("free_trials"))) free_trials = atoi(str);
+	if (forced_trials > 64) forced_trials = 64;
 	/* create song name strings */
 	strncpy(song_name[0], song[0], 64);
 	strncpy(song_name[1], song[1], 64);
@@ -182,24 +192,26 @@ int play_song(int n) {
 //	}
 }
 
-int run_trials(int bout) {
+int run_forced_trials(int bout) {
 	int n, msg, side;
+	uint64_t forced_side = bit_shuffle(forced_trials);
 	time_t time_stamp;
 	for (n = 0; time_check() && n < forced_trials; n++) {
-		side = rand() % 2;
+		side = ((forced_side>>n) & 0x01);
+		flush_events();
 		/* turn on stimulus light */
 		send_msg(RPiMsgSetOn | RPiPin(side+4));
-		/* wait for delay to onset */
+		/* 2 second delay conditioning */
 		sleep(2);
 		/* turn off light + play song */
 		time_stamp = time(NULL);
 		send_msg(RPiMsgSetOff | RPiPin(side+4));
-		log_data(-1, bout * forced_trials + n, time_stamp - start_time, side);
+		log_data(-1, n, time_stamp - start_time, side);
 		play_song(side);
 		while (time_check() && now < time_stamp + intertrial_sec) {
+			flush_events();
 			sleep(1);
 		}
-		flush_events();
 	}
 	return 0;
 }
