@@ -9,11 +9,12 @@
 #include <stdio.h>
 #include <stdint.h>
 #include <signal.h>
-#include <string.h>
 #include <time.h>
 #include <unistd.h>
+#include "RPiGpio.h"
 
 extern char **environ;
+
 
 /***************************************\
 |* FUNCTION PROTOTYPES
@@ -24,6 +25,7 @@ static int log_data(int, int, time_t, int);
 static int logs_open();
 static int logs_close();
 static int play_song(int);
+static int run_trials(int);
 static void signal_handler(int);
 static int time_check();
 
@@ -38,7 +40,7 @@ static const char *hbar2 =
 static const char *log_fname, *song_path, *data_fname, *song[2];
 static char song_name[2][64], full_path[256];
 static int session_min = 60, intertrial_sec = 5, interbout_sec = 60,
-		forced_trials = 60, ethernet = 0;
+		forced_trials = 6, free_trials = 80, ethernet = 0;
 static time_t start_time, now;
 static FILE *log_file, *data_file;
 
@@ -50,13 +52,14 @@ static FILE *log_file, *data_file;
 int main(int argc, const char **argv) {
 	/* read variables and init gpio */
 	config();
+	open_gpio();
+	send_msg(RPiMsgInit);
 	/* set up data files: */
 	start_time = time(NULL);
 	while (ethernet && (start_time < 600)) {
 		sleep(1);
 		start_time = time(NULL);
 	}
-	srand(start_time);
 	logs_open();
 	signal(SIGINT, &signal_handler);
 	signal(SIGTERM, &signal_handler);
@@ -65,20 +68,20 @@ int main(int argc, const char **argv) {
 	int bout;
 	for (bout = 0; time_check(); bout++) {
 		/* run trials for bout */
-fprintf(stderr,"HERE 2\n");
-fprintf(stderr,"HERE 1\n");
-		run_forced_trials(bout);
-fprintf(stderr,"HERE 8\n");
+		run_trials(bout);
 		/* pause for interbout interval & keep event cache flushed */
 		time_stamp = time(NULL);
 		while (time_check() && now < time_stamp + interbout_sec) {
 			sleep(1);
 		}
-fprintf(stderr,"HERE 9\n");
+		flush_events();
 	}
 	/* clean up and exit: */
+	send_msg(RPiMsgSetOff | RPiPin(4) | RPiPin(5));
 	logs_close();
+	send_msg(RPiMsgStop);
 	sleep(1);
+	close_gpio();
 	return 0;
 }
 
@@ -103,7 +106,7 @@ int config() {
 	if ((str=getenv("session_duration"))) session_min = atoi(str);
 	if ((str=getenv("intertrial_interval"))) intertrial_sec = atoi(str);
 	if ((str=getenv("interbout_interval"))) interbout_sec = atoi(str);
-	if ((str=getenv("forced_trials"))) forced_trials = atoi(str);
+	if ((str=getenv("free_trials"))) free_trials = atoi(str);
 	/* create song name strings */
 	strncpy(song_name[0], song[0], 64);
 	strncpy(song_name[1], song[1], 64);
@@ -179,18 +182,24 @@ int play_song(int n) {
 //	}
 }
 
-int run_forced_trials(int bout) {
+int run_trials(int bout) {
 	int n, msg, side;
 	time_t time_stamp;
 	for (n = 0; time_check() && n < forced_trials; n++) {
 		side = rand() % 2;
-		/* play song */
+		/* turn on stimulus light */
+		send_msg(RPiMsgSetOn | RPiPin(side+4));
+		/* wait for delay to onset */
+		sleep(2);
+		/* turn off light + play song */
 		time_stamp = time(NULL);
-		log_data(-1, n, time_stamp - start_time, side);
+		send_msg(RPiMsgSetOff | RPiPin(side+4));
+		log_data(-1, bout * forced_trials + n, time_stamp - start_time, side);
 		play_song(side);
 		while (time_check() && now < time_stamp + intertrial_sec) {
 			sleep(1);
 		}
+		flush_events();
 	}
 	return 0;
 }
