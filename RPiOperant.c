@@ -50,6 +50,7 @@ static FILE *log_file, *data_file;
 /***************************************\
 |* MAIN ENTRANCE POINT
 \***************************************/
+static FILE *debug;
 
 int main(int argc, const char **argv) {
 	/* read variables and init gpio */
@@ -63,22 +64,41 @@ int main(int argc, const char **argv) {
 		start_time = time(NULL);
 	}
 	logs_open();
+debug = fopen("/home/operant/usb/error.log","a");
+fprintf(debug, hbar2);
+fprintf(debug, "START SESSION:\n");
+fprintf(debug, "\ttime=%d: %s",start_time,ctime(&start_time));
+char **var;
+for (var = environ; var && *var; var++)
+fprintf(debug, "\t%s\n", *var);
+fprintf(debug, hbar);
 	signal(SIGINT, &signal_handler);
 	signal(SIGTERM, &signal_handler);
 	/* main loop: */
 	time_t time_stamp;
 	int bout;
+fprintf(debug,"=> Starting main loop\n");
 	for (bout = 0; time_check(); bout++) {
+fprintf(debug,"=> Loop/Bout %d\n",bout);
 		/* run trials for bout */
+fprintf(debug,"\tForced trials\n");
 		run_forced_trials(bout);
+fprintf(debug,"\tFree trials\n");
 		run_free_trials(bout);
 		/* pause for interbout interval & keep event cache flushed */
+fprintf(debug,"\tInterbout interval ");
 		time_stamp = time(NULL);
 		while (time_check() && now < time_stamp + interbout_sec) {
+fprintf(debug,"(");
 			flush_events();
+fprintf(debug,")");
 			sleep(1);
 		}
+fprintf(debug,"\n");
 	}
+fprint(debug,"=> Closing\n");
+fprint(debug,hbar2);
+fclose(debug);
 	/* clean up and exit: */
 	send_msg(RPiMsgSetOff | RPiPin(4) | RPiPin(5));
 	logs_close();
@@ -197,18 +217,26 @@ int run_forced_trials(int bout) {
 	int n, msg, side;
 	uint64_t forced_side = bit_shuffle(forced_trials);
 	time_t time_stamp;
+fprint(debug,"\t-> Starting trial loop\n");
 	for (n = 0; time_check() && n < forced_trials; n++) {
+fprint(debug,"\t\t> LOOP %d\n",n);
 		side = ((forced_side>>n) & 0x01);
+fprint(debug,"\t\t\tside %d\n",side);
 		flush_events();
+fprint(debug,"\t\t\tevents flushed\n");
 		/* turn on stimulus light */
 		send_msg(RPiMsgSetOn | RPiPin(side+4));
+fprint(debug,"\t\t\tLED on\n");
 		/* wait for trigger onset */
 		for (;;) {
+fprint(debug,"\t\t\twaiting ...\n");
 			if (!time_check()) return 1;
+fprint(debug,"\t\t\ttime_check passed\n");
 			if ( (msg=check_event(1,0)) &&
 				(msg & RPiEventChange) &&
 				(msg & RPiPin(side)) ) break;
 		}
+fprint(debug,"\t\t\tTRIGGERED\n");
 		/* turn off light + play song */
 		time_stamp = time(NULL);
 		send_msg(RPiMsgSetOff | RPiPin(side+4));
