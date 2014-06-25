@@ -96,8 +96,8 @@ fprintf(debug,")");
 		}
 fprintf(debug,"\n");
 	}
-fprint(debug,"=> Closing\n");
-fprint(debug,hbar2);
+fprintf(debug,"=> Closing\n");
+fprintf(debug,hbar2);
 fclose(debug);
 	/* clean up and exit: */
 	send_msg(RPiMsgSetOff | RPiPin(4) | RPiPin(5));
@@ -217,26 +217,26 @@ int run_forced_trials(int bout) {
 	int n, msg, side;
 	uint64_t forced_side = bit_shuffle(forced_trials);
 	time_t time_stamp;
-fprint(debug,"\t-> Starting trial loop\n");
+fprintf(debug,"\t-> Starting trial loop\n");
 	for (n = 0; time_check() && n < forced_trials; n++) {
-fprint(debug,"\t\t> LOOP %d\n",n);
+fprintf(debug,"\t\t> LOOP %d\n",n);
 		side = ((forced_side>>n) & 0x01);
-fprint(debug,"\t\t\tside %d\n",side);
+fprintf(debug,"\t\t\tside %d\n",side);
 		flush_events();
-fprint(debug,"\t\t\tevents flushed\n");
+fprintf(debug,"\t\t\tevents flushed\n");
 		/* turn on stimulus light */
 		send_msg(RPiMsgSetOn | RPiPin(side+4));
-fprint(debug,"\t\t\tLED on\n");
+fprintf(debug,"\t\t\tLED on\n");
 		/* wait for trigger onset */
 		for (;;) {
-fprint(debug,"\t\t\twaiting ...\n");
+fprintf(debug,"\t\t\twaiting ...\n");
 			if (!time_check()) return 1;
-fprint(debug,"\t\t\ttime_check passed\n");
+fprintf(debug,"\t\t\ttime_check passed\n");
 			if ( (msg=check_event(1,0)) &&
 				(msg & RPiEventChange) &&
 				(msg & RPiPin(side)) ) break;
 		}
-fprint(debug,"\t\t\tTRIGGERED\n");
+fprintf(debug,"\t\t\tTRIGGERED\n");
 		/* turn off light + play song */
 		time_stamp = time(NULL);
 		send_msg(RPiMsgSetOff | RPiPin(side+4));
