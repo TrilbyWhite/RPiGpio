@@ -50,7 +50,6 @@ static FILE *log_file, *data_file;
 /***************************************\
 |* MAIN ENTRANCE POINT
 \***************************************/
-static FILE *debug;
 
 int main(int argc, const char **argv) {
 	/* read variables and init gpio */
