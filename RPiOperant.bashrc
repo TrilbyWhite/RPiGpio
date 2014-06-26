@@ -12,22 +12,17 @@ ID=$(whoami)
 USB=/home/$ID/usb
 MIN=15
 OPERANT=RPiOperant
-OPSCRIPT=$USB/RPiOperant.sh
+PLAYBACK=RPiPlayback
 ETHERNET=0
 
 maintenance_mode() {
-	## If connected, transmit IP address and wait for ssh access
 	[[ $ETHERNET -eq 0 ]] && return
-	url="http://mccluresk9.com/track_me.html?name=$ID"
-	wget -o /tmp/wget.log -O /tmp/wget.out $url
-	## Wait $1 minutes for the removal of shutdown.key
 	touch /tmp/shutdown.key
 	loops=0
 	while [[ $loops -lt $1 ]]; do
 		sleep 60
 		loops=$(( loops + 1 ))
 	done
-	## If shutdown key remains, shutdown
 	[[ -f /tmp/shutdown.key ]] && shutdown -h now
 }
 
@@ -45,9 +40,15 @@ fi
 
 ## Check for usb with operant.sh file
 ## If no proper usb is present, enter maintainence mode
-[[ -f $OPSCRIPT ]] && source $OPSCRIPT || maintenance_mode $MIN
-
-sync
+if [[ -d $USB/scripts ]]; then
+	for f in $USB/scripts/*-operant.sh; do
+		tr -d '\15\32' < $f > /tmp/script
+		source /tmp/script
+		sync
+	done
+else
+	maintenance_mode $MIN
+fi
 
 sudo systemctl poweroff
 

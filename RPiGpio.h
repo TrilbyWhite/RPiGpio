@@ -39,8 +39,6 @@ const int RPiFatalError			= 0x40000;
 
 #define RPiPin(x)	(1<<x)
 
-FILE *debug;
-
 int msg_fd, event_fd;
 
 inline void open_gpio() {
@@ -54,31 +52,20 @@ inline void close_gpio() {
 }
 
 inline int check_event(int sec, int usec) {
-fprintf(debug,"\t\t\tcheck_event\n");
 	int msg;
 	struct timeval tv;
 	fd_set fds;
 	FD_ZERO(&fds);
 	FD_SET(event_fd, &fds);
-fprintf(debug,"\t\t\tmemset\n");
 	memset(&tv, 0, sizeof(struct timeval));
 	tv.tv_sec = sec;
 	tv.tv_usec = usec;
-fprintf(debug,"\t\t\tselect:\n");
 	int ret;
 	ret = select(event_fd + 1, &fds, 0, 0, &tv);
-fprintf(debug,"\t\t\t\tret: %d\n",ret);
-if (ret == -1) {
-fprintf(debug,"\t\t\t\terr: %d\n",errno);
-fprintf(debug,"\t\t\t\terr: %s\n",strerror(errno));
-}
 	if (FD_ISSET(event_fd, &fds)) {
-fprintf(debug,"\t\t\tFD_ISSET\n");
 		while (read(event_fd, &msg, sizeof(int)) > 0);
-fprintf(debug,"\t\t\t\tread\n");
 	}
 	else msg = 0;
-fprintf(debug,"\t\t\tmsg: %d\n",msg);
 	return msg;
 }
 
