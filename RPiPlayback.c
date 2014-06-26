@@ -139,6 +139,8 @@ int log_data(int bout, int trial, time_t when, int side) {
 	/* log response */
 	fprintf(log_file, "[%06d] trial=%d, side=%d\n",
 			when, trial, side);
+	fprintf(stderr, "[RPiPlayback] [%06d] trial=%d, side=%d\n",
+			when, trial, side);
 	//if (bout == -1) return;
 	/* write to data file */
 	fprintf(data_file, "%04d,%d,%s\n",when, trial + 1, song_name[side]);
@@ -182,6 +184,7 @@ int play_song(int n) {
 	// TODO Block while playing? If not, use fork()/execl instead.
 	snprintf(full_path, 256, "/usr/bin/play -q %s/%s remix %d %d",
 			song_path, song[n], (n ? 0 : 1), (n ? 1 : 0));
+	fprintf(stderr,"[RPiPlayback] SYSTEM: %s\n", full_path);
 	system(full_path);
 //	if (!fork()==0) {
 //		snprintf(full_path, 256, "%s/%s", song_path, song[n]);
