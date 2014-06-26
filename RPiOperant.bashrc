@@ -42,9 +42,12 @@ fi
 ## If no proper usb is present, enter maintainence mode
 if [[ -d $USB/scripts ]]; then
 	for f in $USB/scripts/*-operant.sh; do
+		sudo systemctl start RPiGpio
 		tr -d '\15\32' < $f > /tmp/script
 		source /tmp/script
 		sync
+		sudo systemctl stop RPiGpio
+		sleep 1
 	done
 else
 	maintenance_mode $MIN
