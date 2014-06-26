@@ -29,7 +29,7 @@ maintenance_mode() {
 ## Check if time is going to sync - if so, wait for it
 loops=0
 while [[ $loops -lt 5 ]]; do
-	ping -c 1 google.com && break
+	sudo ping -c 1 google.com && break
 	sleep 4
 	loops=$(( loops + 1 ))
 done
