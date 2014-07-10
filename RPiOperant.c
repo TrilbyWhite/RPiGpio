@@ -95,8 +95,13 @@ int main(int argc, const char **argv) {
 
 uint64_t bit_shuffle(int n) {
 	srandom(time(NULL));
-	uint32_t r = random() * 0xFFFFFFFF;
-	return ((r<<(n/2)) | ((~r) & ~(0xFFFFFFFF<<(n/2))));
+	uint64_t r = 0;
+	int i;
+	for (i = 0; i < n; i+=2) {
+		if (random() * 2 >= RAND_MAX) { r |= (1ULL<<i); r &= ~(1ULL<<(i+1)); }
+		else { r |= 1ULL<<(i+1); }
+	}
+	return r;
 }
 
 int config() {
